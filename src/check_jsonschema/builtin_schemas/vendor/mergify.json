@@ -2624,7 +2624,9 @@
                 "SCHEDULE_BLOCKED_AHEAD_YIELDED",
                 "BASE_REF_ALIGNMENT_TIMEOUT",
                 "GITHUB_STACKED_PULL_REQUEST_MERGE_UNSUPPORTED",
-                "BATCH_SCOPES_CHANGED"
+                "BATCH_SCOPES_CHANGED",
+                "BATCH_AHEAD_BRANCH_EDITED",
+                "CHECKS_INTERRUPTED"
               ],
               "type": "string"
             },
@@ -2759,6 +2761,12 @@
             },
             {
               "description": "A pull request's scopes changed after it was embarked, so its batch was recomposed. It stays in the queue."
+            },
+            {
+              "description": "A commit was pushed to the branch of a batch ahead in the queue, which `allow_queue_branch_edit` permits, so this pull request's speculative checks are restarted on top of it. It stays in the queue."
+            },
+            {
+              "description": "A required check was cancelled before producing a result, so the queue conditions cannot be satisfied. The check says nothing about the pull request; requeueing runs it again."
             }
           ],
           "x-mergify-has-data-type": true,
@@ -4967,7 +4975,7 @@
           "type": "string"
         },
         "capacities": {
-          "description": "How many speculative checks each scope may run at the same time, as a map of scope name to capacity. Works for any `source` (file globs or the manual scopes API just decide membership; capacity is declared here). A scope listed here runs against its own independent budget; a PR in several capped scopes consumes one slot from each. PRs whose scopes are all absent from this map share the repo-wide `merge_queue.max_parallel_checks` pool. Strict branch protection still forces an effective capacity of 1.",
+          "description": "How many speculative checks each scope may run at the same time, as a map of scope name to capacity. Works for any `source` (file globs or the manual scopes API just decide membership; capacity is declared here). A scope listed here runs against its own independent budget; a PR in several capped scopes consumes one slot from each. PRs whose scopes are all absent from this map share the repo-wide `merge_queue.max_parallel_checks` pool, unless `default_capacity` gives every scope a budget. Strict branch protection still forces an effective capacity of 1.",
           "patternProperties": {
             "^[A-Za-z0-9_-]+$": {
               "maximum": 128,
@@ -4981,6 +4989,21 @@
           },
           "title": "Capacities",
           "type": "object"
+        },
+        "default_capacity": {
+          "anyOf": [
+            {
+              "maximum": 128,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How many speculative checks a scope without an explicit `capacities` entry may run at the same time. Applies to every scope observed on queued pull requests, so dynamic scope sets (e.g. sent by a monorepo build tool through the manual scopes API) get a per-scope budget without enumerating names; an explicit `capacities` entry still wins for its scope. `merge_queue.max_parallel_checks` remains the global ceiling on the total. When unset, scopes without a `capacities` entry are unlimited, and pull requests with no scopes always draw from the repo-wide pool. Strict branch protection still forces an effective capacity of 1.",
+          "title": "Default Capacity"
         }
       },
       "title": "Scopes",
