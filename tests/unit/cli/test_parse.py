@@ -6,6 +6,7 @@ import click
 import pytest
 
 from check_jsonschema import main as cli_main
+from check_jsonschema.cli.param_types import _LazyFile
 from check_jsonschema.cli.parse_result import ParseResult, SchemaLoadingMode
 
 
@@ -81,7 +82,7 @@ def test_schemafile_and_instancefile(
     assert mock_parse_result.schema_path == "schema.json"
     assert isinstance(mock_parse_result.instancefiles, tuple)
     for f in mock_parse_result.instancefiles:
-        assert isinstance(f, click.utils.LazyFile)
+        assert isinstance(f, _LazyFile)
     assert tuple(f.name for f in mock_parse_result.instancefiles) == ("foo.json",)
 
 

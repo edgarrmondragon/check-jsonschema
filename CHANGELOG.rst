@@ -11,6 +11,8 @@ Unreleased
 .. vendor-insert-here
 
 - Update vendored schemas: bitbucket-pipelines, mergify, renovate (2026-08-16)
+- Fix a ``DeprecationWarning`` emitted under Click 8.5.0 due to use of the
+  deprecated ``click.utils.LazyFile``
 
 0.38.0
 ------
